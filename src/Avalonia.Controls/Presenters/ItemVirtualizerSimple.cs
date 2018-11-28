@@ -517,7 +517,7 @@ namespace Avalonia.Controls.Presenters
 
             if (index >= 0 && index < ItemCount)
             {
-                if (index < FirstIndex)
+         /*       if (index < FirstIndex)
                 {
                     newOffset = index;
                 }
@@ -529,6 +529,21 @@ namespace Avalonia.Controls.Presenters
                 {
                     newOffset = OffsetValue - 1;
                 }
+                */
+                if (index <= FirstIndex)
+                {
+                    {
+                        newOffset = index;
+                    }
+                }
+                else if (index >= NextIndex)                    
+                {
+                    {
+                        newOffset = index - Math.Ceiling(ViewportValue - 1);
+                    }
+                }
+
+
 
                 if (newOffset != -1)
                 {

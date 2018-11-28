@@ -1,7 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         Title="AvaloniaUI Virtualization Test"
         Width="800"
-        Height="600">
+        Height="560">
     <DockPanel LastChildFill="True" Margin="16">
         <StackPanel DockPanel.Dock="Right" 
                     Margin="16 0 0 0" 
@@ -53,7 +53,7 @@
             </ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding Header}" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding Header}" Height="{Binding Height}" TextWrapping="Wrap"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
