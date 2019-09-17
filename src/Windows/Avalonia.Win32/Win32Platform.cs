@@ -86,7 +86,8 @@ namespace Avalonia.Win32
                 .Bind<IPlatformSettings>().ToConstant(s_instance)
                 .Bind<IPlatformThreadingInterface>().ToConstant(s_instance)
                 .Bind<IRenderLoop>().ToConstant(new RenderLoop())
-                .Bind<IRenderTimer>().ToConstant(new DefaultRenderTimer(60))
+                //.Bind<IRenderTimer>().ToConstant(new DefaultRenderTimer(60))
+                .Bind<IRenderTimer>().ToConstant(new WindowsDWMRenderTimer())
                 .Bind<ISystemDialogImpl>().ToSingleton<SystemDialogImpl>()
                 .Bind<IWindowingPlatform>().ToConstant(s_instance)
                 .Bind<PlatformHotkeyConfiguration>().ToSingleton<PlatformHotkeyConfiguration>()
@@ -95,7 +96,7 @@ namespace Avalonia.Win32
 
             if (options.AllowEglInitialization)
                 Win32GlManager.Initialize();
-            
+
             _uiThread = Thread.CurrentThread;
 
             if (OleContext.Current != null)
@@ -148,14 +149,14 @@ namespace Avalonia.Win32
             });
         }
 
-        private static readonly int SignalW = unchecked((int) 0xdeadbeaf);
+        private static readonly int SignalW = unchecked((int)0xdeadbeaf);
         private static readonly int SignalL = unchecked((int)0x12345678);
 
         public void Signal(DispatcherPriority prio)
         {
             UnmanagedMethods.PostMessage(
                 _hwnd,
-                (int) UnmanagedMethods.WindowsMessage.WM_DISPATCH_WORK_ITEM,
+                (int)UnmanagedMethods.WindowsMessage.WM_DISPATCH_WORK_ITEM,
                 new IntPtr(SignalW),
                 new IntPtr(SignalL));
         }
@@ -167,7 +168,7 @@ namespace Avalonia.Win32
         [SuppressMessage("Microsoft.StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Using Win32 naming for consistency.")]
         private IntPtr WndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
         {
-            if (msg == (int) UnmanagedMethods.WindowsMessage.WM_DISPATCH_WORK_ITEM && wParam.ToInt64() == SignalW && lParam.ToInt64() == SignalL)
+            if (msg == (int)UnmanagedMethods.WindowsMessage.WM_DISPATCH_WORK_ITEM && wParam.ToInt64() == SignalW && lParam.ToInt64() == SignalL)
             {
                 Signaled?.Invoke(null);
             }
@@ -276,5 +277,26 @@ namespace Avalonia.Win32
 
             SetProcessDPIAware();
         }
+    }
+    class WindowsDWMRenderTimer : IRenderTimer
+    {
+        public event Action<TimeSpan> Tick;
+
+        Thread _renderTick;
+        public WindowsDWMRenderTimer()
+        {
+            _renderTick = new Thread(() =>
+            {
+                while (true)
+                {
+                    DwmFlush();
+                    Tick?.Invoke(TimeSpan.FromMilliseconds(Environment.TickCount));
+                }
+            });
+            _renderTick.IsBackground = true;
+            _renderTick.Start();
+        }
+        [DllImport("Dwmapi.dll")]
+        private static extern int DwmFlush();
     }
 }
