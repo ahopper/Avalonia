@@ -10,9 +10,10 @@ namespace RenderDemo.Pages
 {
     public class WriteableBitmapPage : UserControl
     {
+        int _frame = 0;
         private WriteableBitmap _bitmap;
         private int _scroll = 0;
-        public WriteableBitmapPage()
+         public WriteableBitmapPage()
         {
             this.InitializeComponent();
             CreateImage();
@@ -47,8 +48,18 @@ namespace RenderDemo.Pages
                          new Rect(0, 0, _bitmap.PixelSize.Width/2 , _bitmap.PixelSize.Height/2));
 
             _scroll = (_scroll + 1) % 256;
-            Dispatcher.UIThread.InvokeAsync(InvalidateVisual, DispatcherPriority.Background);
+           
 
+            if ((_frame & 1) == 0)
+            {
+                context.FillRectangle(Brushes.Cyan, new Rect(300, 0, 100, 10));
+            }
+            else
+            {
+                context.FillRectangle(Brushes.Red, new Rect(300, 0, 100, 10));
+            }
+            _frame++;
+            Dispatcher.UIThread.InvokeAsync(InvalidateVisual, DispatcherPriority.Background);
         }
 
         private void InitializeComponent()
